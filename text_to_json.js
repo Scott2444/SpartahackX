@@ -40,7 +40,7 @@ export function convertTermsToJson(inputText) {
     };
 }
 
-function convertAndSaveToFile(inputText, outputFilePath) {
+export function convertAndSaveToFile(inputText, outputFilePath) {
     try {
         // Convert the text to JSON
         const jsonResult = convertTermsToJson(inputText);
