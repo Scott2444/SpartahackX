@@ -7,7 +7,7 @@ Start Chrome with this command:
 All other chrome tabs and applications must be closed.
 
 """
-
+OUTPUT_FILE = "Quizlet_API/flashcards.json"
 
 
 from selenium import webdriver
@@ -17,6 +17,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import time
+from typing import List, Dict
+import subprocess
 
 class QuizletChromeReader:
     def __init__(self):
@@ -31,11 +33,11 @@ class QuizletChromeReader:
             print("Error connecting to Chrome. Make sure Chrome is running with remote debugging enabled.")
             raise e
 
-    def get_active_tab_url(self):
+    def get_active_tab_url(self) -> str:
         """Get the URL of the currently active tab"""
         return self.driver.current_url
 
-    def extract_flashcards(self):
+    def extract_flashcards(self) -> List[Dict[str, str]]:
         """Extract flashcards from the current page"""
         flashcards = []
         
@@ -69,7 +71,6 @@ class QuizletChromeReader:
                             'term': term,
                             'definition': definition
                         }
-                        print(f"Found flashcard: {flashcard}")  # Debug print
                         flashcards.append(flashcard)
                         
                 except Exception as e:
@@ -82,7 +83,7 @@ class QuizletChromeReader:
             
         return flashcards
 
-    def save_to_json(self, flashcards, output_file='flashcards.json'):
+    def save_to_json(self, flashcards: List[Dict[str, str]], output_file=OUTPUT_FILE) -> None:
         """Save the flashcards to a JSON file"""
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
@@ -95,32 +96,36 @@ class QuizletChromeReader:
         """Close the WebDriver connection"""
         self.driver.quit()
 
-def main():
-    """Main function to run the scraper"""
-    print("Starting Quizlet Chrome Reader...")
+    def scan(self):
+        """Main function to run the scraper"""
+        print("Starting Quizlet Chrome Reader...")
+        
+        try:
+            url = self.get_active_tab_url()
+            
+            if "quizlet.com" not in url:
+                print("Please navigate to a Quizlet page in the active tab")
+                return
+                
+            print(f"Reading flashcards from: {url}")
+            flashcards = self.extract_flashcards()
+            
+            if flashcards:
+                self.save_to_json(flashcards)
+            else:
+                print("No flashcards found on the page")
+                
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+        finally:
+            if 'reader' in locals():
+                self.close()
     
-    try:
-        reader = QuizletChromeReader()
-        url = reader.get_active_tab_url()
-        
-        if "quizlet.com" not in url:
-            print("Please navigate to a Quizlet page in the active tab")
-            return
-            
-        print(f"Reading flashcards from: {url}")
-        flashcards = reader.extract_flashcards()
-        
-        if flashcards:
-            reader.save_to_json(flashcards)
-            print(f"Found {len(flashcards)} flashcards!")
-        else:
-            print("No flashcards found on the page")
-            
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
-    finally:
-        if 'reader' in locals():
-            reader.close()
+    def open_chrome(self, url: str):
+        # Using system() method to
+        # execute shell commands
+        subprocess.run(["powershell", "pwd"], shell=True)
 
 if __name__ == "__main__":
-    main()
+    reader = QuizletChromeReader()
+    reader.open_chrome()
