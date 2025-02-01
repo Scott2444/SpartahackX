@@ -1,3 +1,15 @@
+"""
+Instructions
+
+Start Chrome with this command:
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 -incognito
+
+All other chrome tabs and applications must be closed.
+
+"""
+
+
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -17,7 +29,6 @@ class QuizletChromeReader:
             self.driver = webdriver.Chrome(options=chrome_options)
         except Exception as e:
             print("Error connecting to Chrome. Make sure Chrome is running with remote debugging enabled.")
-            print("See instructions in the comments above.")
             raise e
 
     def get_active_tab_url(self):
@@ -30,28 +41,42 @@ class QuizletChromeReader:
         
         # Wait for the flashcard elements to load
         try:
+            # Wait for any span with class TermText to be present
             WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "SetPageTerm-content"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "section[data-testid='terms-list']"))
             )
-            
-            # Get all flashcard containers
-            cards = self.driver.find_elements(By.CLASS_NAME, "SetPageTerm-content")
-            
-            for card in cards:
+
+            # Small delay to ensure all cards are loaded
+            time.sleep(2)
+
+            # Find the section containing all the terms
+            section = self.driver.find_element(By.CSS_SELECTOR, "section[data-testid='terms-list']")
+
+            # Find all term and definition spans within that section
+            term_elements = section.find_elements(By.CSS_SELECTOR, "span.TermText.notranslate.lang-en")
+
+            # Iterate through the found terms and definitions
+            flashcards = []
+            for i in range(0, len(term_elements), 2):  # Assuming terms and definitions alternate
                 try:
-                    # Get term and definition
-                    term = card.find_element(By.CLASS_NAME, "SetPageTerm-wordText").text
-                    definition = card.find_element(By.CLASS_NAME, "SetPageTerm-definitionText").text
-                    
+                    # Each term is at an even index and its corresponding definition is at the next (odd) index
+                    term = term_elements[i].text.strip()
+                    definition = term_elements[i+1].text.strip()
+
+                    # Store the flashcard if both term and definition exist
                     if term and definition:
-                        flashcards.append({
-                            'term': term.strip(),
-                            'definition': definition.strip()
-                        })
+                        flashcard = {
+                            'term': term,
+                            'definition': definition
+                        }
+                        print(f"Found flashcard: {flashcard}")  # Debug print
+                        flashcards.append(flashcard)
+                        
                 except Exception as e:
                     print(f"Error extracting card: {str(e)}")
                     continue
-                    
+
+
         except Exception as e:
             print(f"Error waiting for page elements: {str(e)}")
             
@@ -77,7 +102,6 @@ def main():
     try:
         reader = QuizletChromeReader()
         url = reader.get_active_tab_url()
-        print(f"Currrent URL: {url}")
         
         if "quizlet.com" not in url:
             print("Please navigate to a Quizlet page in the active tab")
@@ -88,6 +112,7 @@ def main():
         
         if flashcards:
             reader.save_to_json(flashcards)
+            print(f"Found {len(flashcards)} flashcards!")
         else:
             print("No flashcards found on the page")
             
