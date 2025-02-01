@@ -1,0 +1,52 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "summary": "Quiz yourself on Quizlet flashcards using voice commands",
+          "examplePhrases": [
+            "Alexa, open quizlet quiz",
+            "Alexa, ask quizlet quiz to start quiz with my PIN",
+            "The answer is mitochondria"
+          ],
+          "keywords": [
+            "quiz",
+            "flashcards",
+            "study",
+            "education",
+            "quizlet",
+            "learning"
+          ],
+          "name": "Quizlet Quiz",
+          "description": "Study your Quizlet flashcards through voice interaction. Simply provide a PIN and Alexa will quiz you on the terms."
+        }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "1. Launch the skill\n2. Use PIN 1234 when prompted\n3. Answer the questions as they are asked",
+      "category": "EDUCATION_AND_REFERENCE",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-2:051826740338:function:AlexaQuizlet",
+          "sourceDir": "lambda"
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "locales": {
+        "en-US": {
+          "privacyPolicyUrl": "",
+          "termsOfUseUrl": ""
+        }
+      },
+      "isExportCompliant": true,
+      "containsAds": false,
+      "isChildDirected": false,
+      "usesPersonalInfo": false
+    }
+  }
+}
