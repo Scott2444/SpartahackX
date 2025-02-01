@@ -1,6 +1,15 @@
+/* @file text_to_json.js
+ *
+ * Usage:
+ * 1) Export quizlet set
+ * 2) Set delimeters to:
+ *      a) Between term and definition = <ans>
+ *      b) Between rows = \n
+ */
+
 const fs = require('fs');
 
-function convertTermsToJson(inputText) {
+export function convertTermsToJson(inputText) {
     // Handle empty or invalid input
     if (!inputText || typeof inputText !== 'string') {
         throw new Error('Input must be a non-empty string');
@@ -50,6 +59,7 @@ function convertAndSaveToFile(inputText, outputFilePath) {
     }
 }
 
+/*
 // Example usage:
 const input = `France<ans>Paris
 Japan<ans>Tokyo
@@ -62,3 +72,4 @@ const outputFile = 'flashcards.json';
 
 // Convert and save
 convertAndSaveToFile(input, outputFile);
+*/
