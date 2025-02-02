@@ -18,7 +18,7 @@ import random
 
 OUTPUT_FILE = "Quizlet_API/flashcards.json"
 PATH_TO_PROFILE = r"C:\Users\scott\AppData\Local\Google\Chrome\User Data\Default"
-HOME_PAGE = ""
+HOME_PAGE = "https://quizlet.com"
 
 class QuizletStealthReader:
     def __init__(self):
@@ -26,6 +26,7 @@ class QuizletStealthReader:
         options = webdriver.ChromeOptions()
         
         # Additional stealth options
+        options.add_argument("--headless=new")
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--no-sandbox')
@@ -100,13 +101,14 @@ class QuizletStealthReader:
                 self.driver.execute_script(f"window.scrollTo(0, {current_position})")
                 time.sleep(random.uniform(0.3, 0.7))
 
-    def open_url(self, url: str, allow_captcha: bool = False):
+    def open_url(self, url: str, start_at_homepage: bool = True, allow_captcha: bool = False):
         # Randomize initial delay
         time.sleep(random.uniform(1, 3))
         
         # First visit homepage with some random behavior
-        self.driver.get("https://quizlet.com")
-        time.sleep(random.uniform(2, 4))
+        if start_at_homepage:
+            self.driver.get(HOME_PAGE)
+            time.sleep(random.uniform(2, 4))
         
         # Now navigate to the actual page
         self.driver.get(url)
@@ -251,10 +253,10 @@ class QuizletStealthReader:
     
 
 if __name__ == "__main__":
-    url = "https://quizlet.com/434682915/mkt327-questions-flash-cards/?funnelUUID=158f1531-5bde-47f7-b2c2-bcbf1c67d0ec"
+    url = "https://quizlet.com/434682915/mkt327-questions-flash-cards/"
     # url = "https://vercel.com/"
     reader = QuizletStealthReader()
-    reader.open_url(url, allow_captcha=True)
+    reader.open_url(url, start_at_homepage=False, allow_captcha=True)
     reader.scan()
 
     # print("Finished")
