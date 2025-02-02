@@ -1,8 +1,10 @@
 const Alexa = require('ask-sdk-core');
-// const quizlet = require('./quizlet');
+
 const { fetchQuizData, defaultQuestions } = require('./quizlet');
 
 let quizQuestions = defaultQuestions;
+
+
 
 const StartQuizIntentHandler = {
     canHandle(handlerInput) {
@@ -43,7 +45,7 @@ const LaunchRequestHandler = {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'LaunchRequest';
     },
     handle(handlerInput) {
-        const speakOutput = 'Welcome to Quiz Me! Say "start quiz" to begin, or "help" for instructions.';
+        const speakOutput = 'Welcome to Quiz Me! Say "start" to begin, or "help" for instructions.';
         return handlerInput.responseBuilder
             .speak(speakOutput)
             .reprompt(speakOutput)
@@ -51,30 +53,7 @@ const LaunchRequestHandler = {
     }
 };
 
-// const StartQuizIntentHandler = {
-//     canHandle(handlerInput) {
-//         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-//             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'StartQuizIntent';
-//     },
-//     handle(handlerInput) {
-//         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-        
-//         // Initialize or reset session data
-//         sessionAttributes.questionIndex = 0;
-//         sessionAttributes.score = 0;
-        
-//         const firstQuestion = quizlet[0];
-//         const speakOutput = `Let's begin! Question 1: ${firstQuestion.question}`;
-        
-//         sessionAttributes.questionIndex = 1;
-//         handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-        
-//         return handlerInput.responseBuilder
-//             .speak(speakOutput)
-//             .reprompt('Please provide your answer.')
-//             .getResponse();
-//     }
-// };
+
 
 const AnswerIntentHandler = {
     canHandle(handlerInput) {
@@ -87,8 +66,8 @@ const AnswerIntentHandler = {
         
         if (typeof sessionAttributes.questionIndex === 'undefined') {
             return handlerInput.responseBuilder
-                .speak("Please say 'start quiz' to begin.")
-                .reprompt("Say 'start quiz' to begin.")
+                .speak("Please say 'start' to begin.")
+                .reprompt("Say 'start' to begin.")
                 .getResponse();
         }
 
@@ -117,7 +96,7 @@ const AnswerIntentHandler = {
             const percentage = Math.round((finalScore / totalQuestions) * 100);
             
             speakOutput += `Quiz complete! Your final score is ${finalScore} out of ${totalQuestions}, or ${percentage}%. `;
-            speakOutput += "Say 'start quiz' to try again or 'exit' to end.";
+            speakOutput += "Say 'start' to try again or 'exit' to end.";
             
             sessionAttributes.questionIndex = 0;
             sessionAttributes.score = 0;
@@ -136,71 +115,6 @@ const AnswerIntentHandler = {
     }
 };
 
-// const AnswerIntentHandler = {
-//     canHandle(handlerInput) {
-//         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-//             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AnswerIntent';
-//     },
-//     handle(handlerInput) {
-//         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-//         const answerGiven = Alexa.getSlotValue(handlerInput.requestEnvelope, 'Answer');
-        
-//         // Check if quiz has been started
-//         if (typeof sessionAttributes.questionIndex === 'undefined') {
-//             return handlerInput.responseBuilder
-//                 .speak("Please say 'start quiz' to begin the quiz first.")
-//                 .reprompt("Say 'start quiz' to begin.")
-//                 .getResponse();
-//         }
-
-//         const currentQuestionIndex = sessionAttributes.questionIndex - 1;
-//         const correctAnswer = quizlet[currentQuestionIndex].answer.toLowerCase();
-//         let speakOutput = '';
-
-//         // Validate answer
-//         if (!answerGiven) {
-//             speakOutput = "I didn't catch your answer. Please try again.";
-//             return handlerInput.responseBuilder
-//                 .speak(speakOutput)
-//                 .reprompt("Please provide your answer.")
-//                 .getResponse();
-//         }
-
-//         // Check answer
-//         if (correctAnswer.includes(answerGiven.toLowerCase())) {
-//             sessionAttributes.score += 1;
-//             speakOutput = "Correct! ";
-//         } else {
-//             speakOutput = `Incorrect. The correct answer is: ${quizlet[currentQuestionIndex].answer}. `;
-//         }
-
-//         // Check if quiz is complete
-//         if (sessionAttributes.questionIndex >= quizlet.length) {
-//             const finalScore = sessionAttributes.score;
-//             const totalQuestions = quizlet.length;
-//             const percentage = Math.round((finalScore / totalQuestions) * 100);
-            
-//             speakOutput += `Quiz complete! Your final score is ${finalScore} out of ${totalQuestions}, or ${percentage}%. `;
-//             speakOutput += "Say 'start quiz' to try again or 'exit' to end.";
-            
-//             // Reset for next round
-//             sessionAttributes.questionIndex = 0;
-//             sessionAttributes.score = 0;
-//         } else {
-//             // Get next question
-//             const nextQuestion = quizlet[sessionAttributes.questionIndex];
-//             speakOutput += `Question ${sessionAttributes.questionIndex + 1}: ${nextQuestion.question}`;
-//             sessionAttributes.questionIndex += 1;
-//         }
-
-//         handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-
-//         return handlerInput.responseBuilder
-//             .speak(speakOutput)
-//             .reprompt('Please provide your answer.')
-//             .getResponse();
-//     }
-// };
 
 const RepeatQuestionIntentHandler = {
     canHandle(handlerInput) {
@@ -212,12 +126,12 @@ const RepeatQuestionIntentHandler = {
         
         if (!sessionAttributes.questionIndex || sessionAttributes.questionIndex === 0) {
             return handlerInput.responseBuilder
-                .speak("No question to repeat. Say 'start quiz' to begin.")
-                .reprompt("Say 'start quiz' to begin.")
+                .speak("No question to repeat. Say 'start' to begin.")
+                .reprompt("Say 'start' to begin.")
                 .getResponse();
         }
 
-        const currentQuestion = quizlet[sessionAttributes.questionIndex - 1];
+        const currentQuestion = quizQuestions[sessionAttributes.questionIndex - 1];
         const speakOutput = `The current question is: ${currentQuestion.question}`;
 
         return handlerInput.responseBuilder
@@ -237,8 +151,8 @@ const ScoreIntentHandler = {
         
         if (!sessionAttributes.score) {
             return handlerInput.responseBuilder
-                .speak("No quiz in progress. Say 'start quiz' to begin.")
-                .reprompt("Say 'start quiz' to begin.")
+                .speak("No quiz in progress. Say 'start' to begin.")
+                .reprompt("Say 'start' to begin.")
                 .getResponse();
         }
 
@@ -259,7 +173,7 @@ const HelpIntentHandler = {
             && Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.HelpIntent';
     },
     handle(handlerInput) {
-        const speakOutput = 'You can say "start quiz" to begin, "repeat question" to hear the current question again, ' +
+        const speakOutput = 'You can say "start" to begin, "repeat question" to hear the current question again, ' +
             '"score" to hear your current score, or "stop" to end the quiz. How can I help?';
 
         return handlerInput.responseBuilder
