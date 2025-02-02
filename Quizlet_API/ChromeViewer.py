@@ -21,6 +21,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium_stealth import stealth
 import json
 import time
 from typing import List, Dict
@@ -41,6 +42,14 @@ class QuizletChromeReader:
         # Connect to the existing Chrome instance
         try:
             self.driver = webdriver.Chrome(options=chrome_options)
+            stealth(self.driver,
+                languages=["en-US", "en"],
+                vendor="Google Inc.",
+                platform="Win32",
+                webgl_vendor="Intel Inc.",
+                renderer="Intel Iris OpenGL Engine",
+                fix_hairline=True,
+                )
         except Exception as e:
             print("Error connecting to Chrome. Make sure Chrome is running with remote debugging enabled.")
             raise e
@@ -52,11 +61,11 @@ class QuizletChromeReader:
         except Exception as e:
             pass
     
-    def open_url(self, url: str):
+    def open_url(self, url: str, allow_captcha: bool = False):
         # Open URL provided
         try:
             time.sleep(0.5)
-            self.driver.get(url)
+            self.driver.execute_script(f"window.location.href = '{url}'")
         except Exception as e:
             print("Invalid URL. Please double check your input. Closing Chrome...")
             self.close()
@@ -75,7 +84,9 @@ class QuizletChromeReader:
         print("URL Loaded")
 
         # Detect Bot Detector that cannot be bypassed
-        if "quizlet" in self.get_active_tab_url() and EC.presence_of_element_located((By.ID, "px-captcha-wrapper")):
+        if (not allow_captcha and 
+            "quizlet" in self.get_active_tab_url() and 
+            EC.presence_of_element_located((By.ID, "px-captcha-wrapper"))):
             self.close()
             raise RuntimeError("Captcha Detected. It knows we aren't a human!")
     
@@ -153,8 +164,11 @@ class QuizletChromeReader:
 
     def close(self):
         """Close the WebDriver connection and Chrome Window"""
-        self.driver.close()
-        self.driver.quit()
+        try:
+            self.driver.close()
+            self.driver.quit()
+        except Exception as e:
+            pass
 
     def scan(self):
         """Main function to run the scraper"""
@@ -183,11 +197,13 @@ class QuizletChromeReader:
     
 
 if __name__ == "__main__":
-    url = "https://quizlet.com/502297860/realidades-2-ch8a-vocabulario-flash-cards/?funnelUUID=0b3274f9-c572-4a34-9e30-bb47cd670840"
-    # url = "https://vercel.com/"
+    # url = "https://quizlet.com/502297860/realidades-2-ch8a-vocabulario-flash-cards/?funnelUUID=0b3274f9-c572-4a34-9e30-bb47cd670840"
+    url = "https://vercel.com/"
     reader = QuizletChromeReader()
-    reader.open_url(url)
+    reader.open_url(url, allow_captcha=True)
     reader.scan()
-    reader.close()
 
     print("Finished")
+    input("Press any key to close window...")
+
+    reader.close()
