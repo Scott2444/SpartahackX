@@ -1,5 +1,5 @@
 """
-Windows Only!!
+Windows OS Only!!
 
 Instructions
 
@@ -29,19 +29,15 @@ import subprocess
 
 class QuizletChromeReader:
     def __init__(self):
-        # Kill all Chrome processes on Windows
-        os.system("taskkill /F /IM chrome.exe")
+        # Set up Chrome options
+        options = webdriver.ChromeOptions()
+        options.add_argument("start-maximized")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option('useAutomationExtension', False)
 
-        # Run Chrome in debugger
-        subprocess.Popen([chrome_path] + args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-        # Set up Chrome options to connect to existing browser
-        chrome_options = Options()
-        chrome_options.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
-        
-        # Connect to the existing Chrome instance
         try:
-            self.driver = webdriver.Chrome(options=chrome_options)
+            # Initialize the WebDriver
+            self.driver = webdriver.Chrome(options=options)
             stealth(self.driver,
                 languages=["en-US", "en"],
                 vendor="Google Inc.",
@@ -51,8 +47,12 @@ class QuizletChromeReader:
                 fix_hairline=True,
                 )
         except Exception as e:
-            print("Error connecting to Chrome. Make sure Chrome is running with remote debugging enabled.")
+            print("Error starting chrome driver.")
             raise e
+        
+        # Avoid navigator.webdriver = True Detection
+        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
     
     def __del__(self):
         # Close chrome on destruction
@@ -63,6 +63,9 @@ class QuizletChromeReader:
     
     def open_url(self, url: str, allow_captcha: bool = False):
         # Open URL provided
+        time.sleep(0.4)
+        self.driver.execute_script(f"window.location.href = 'https://quizlet.com'")
+
         try:
             time.sleep(0.5)
             self.driver.execute_script(f"window.location.href = '{url}'")
@@ -164,11 +167,9 @@ class QuizletChromeReader:
 
     def close(self):
         """Close the WebDriver connection and Chrome Window"""
-        try:
-            self.driver.close()
-            self.driver.quit()
-        except Exception as e:
-            pass
+        self.driver.close()
+        self.driver.quit()
+        return
 
     def scan(self):
         """Main function to run the scraper"""
@@ -197,13 +198,14 @@ class QuizletChromeReader:
     
 
 if __name__ == "__main__":
-    # url = "https://quizlet.com/502297860/realidades-2-ch8a-vocabulario-flash-cards/?funnelUUID=0b3274f9-c572-4a34-9e30-bb47cd670840"
-    url = "https://vercel.com/"
+    url = "https://quizlet.com/434682915/mkt327-questions-flash-cards/?funnelUUID=158f1531-5bde-47f7-b2c2-bcbf1c67d0ec"
+    # url = "https://vercel.com/"
     reader = QuizletChromeReader()
     reader.open_url(url, allow_captcha=True)
     reader.scan()
 
-    print("Finished")
-    input("Press any key to close window...")
+    # print("Finished")
+    # print("Press any key to close window...")
+    # input()
 
     reader.close()
