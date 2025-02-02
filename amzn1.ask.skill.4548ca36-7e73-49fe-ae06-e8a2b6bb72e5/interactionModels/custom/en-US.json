@@ -1,0 +1,126 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "slots": [],
+          "name": "QuizletTestIntent",
+          "samples": [
+            "start quiz",
+            "study quiz",
+            "study quizlet",
+            "study",
+            "do quizlet"
+          ]
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "slots": [
+            {
+              "name": "Answer",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "AnswerIntent",
+          "samples": [
+            "I think it is {Answer}",
+            "is it {Answer}",
+            "I believe it\u0027s the {Answer}",
+            "It\u0027s the {Answer}",
+            "I think the answer is the {Answer}",
+            "What is the {Answer}",
+            "Is the answer the {Answer}",
+            "What is {Answer}",
+            "I think it\u0027s {Answer}",
+            "Is the answer {Answer}",
+            "It is {Answer}",
+            "I believe it\u0027s {Answer}",
+            "just {Answer}",
+            "The answer is {Answer}",
+            "The correct answer is {Answer}",
+            "It\u0027s {Answer}",
+            "I think the answer is {Answer}",
+            "My answer is {Answer}"
+          ]
+        },
+        {
+          "slots": [],
+          "name": "StartQuizIntent",
+          "samples": [
+            "begin new quiz",
+            "let\u0027s go",
+            "let\u0027s begin",
+            "start new quiz",
+            "begin",
+            "start",
+            "begin quiz",
+            "start quiz"
+          ]
+        },
+        {
+          "slots": [],
+          "name": "RepeatQuestionIntent",
+          "samples": [
+            "what is the question again",
+            "one more time",
+            "say that question again",
+            "repeat the question",
+            "can you repeat the question",
+            "can you repeat",
+            "what is the question",
+            "what",
+            "what did you say",
+            "repeat",
+            "say that again",
+            "what was the question",
+            "repeat question"
+          ]
+        },
+        {
+          "slots": [],
+          "name": "ScoreIntent",
+          "samples": [
+            "what is the score",
+            "score",
+            "how many did I get right",
+            "what\u0027s my current score",
+            "how am i doing",
+            "what is my score",
+            "what\u0027s my score"
+          ]
+        },
+        {
+          "slots": [],
+          "name": "ShuffleQuestionsIntent",
+          "samples": [
+            "scramble questions",
+            "shuffle",
+            "shuffle questions",
+            "scramble"
+          ]
+        }
+      ],
+      "types": [],
+      "invocationName": "flash cards"
+    }
+  }
+}
