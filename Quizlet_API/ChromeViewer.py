@@ -1,20 +1,8 @@
 """
 Windows OS Only!!
-
-Instructions
-
-Start Chrome with this command:
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 -incognito
-
-All other chrome tabs and applications must be closed.
-
 """
-OUTPUT_FILE = "Quizlet_API/flashcards.json"
-chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-args = ["--remote-debugging-port=9222", "-incognito"]
-
-
 import os
+import random
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -26,18 +14,37 @@ import json
 import time
 from typing import List, Dict
 import subprocess
+import random
 
-class QuizletChromeReader:
+OUTPUT_FILE = "Quizlet_API/flashcards.json"
+PATH_TO_PROFILE = r"C:\Users\scott\AppData\Local\Google\Chrome\User Data\Default"
+HOME_PAGE = ""
+
+class QuizletStealthReader:
     def __init__(self):
-        # Set up Chrome options
+        # Enhanced Chrome options
         options = webdriver.ChromeOptions()
-        options.add_argument("start-maximized")
+        
+        # Additional stealth options
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-automation')
+        options.add_argument('--disable-gpu')
+        options.add_argument(f'--window-size={random.randint(1050,1200)},{random.randint(800,1000)}')
+        options.add_argument(f'--user-data-dir={PATH_TO_PROFILE}')
+        options.add_argument(f"user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        # Add random plugins count
+        options.add_argument(f'--numPlugins={random.randint(3,7)}')
+        
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
 
         try:
-            # Initialize the WebDriver
             self.driver = webdriver.Chrome(options=options)
+            
+            # Enhanced stealth configuration
             stealth(self.driver,
                 languages=["en-US", "en"],
                 vendor="Google Inc.",
@@ -45,53 +52,145 @@ class QuizletChromeReader:
                 webgl_vendor="Intel Inc.",
                 renderer="Intel Iris OpenGL Engine",
                 fix_hairline=True,
-                )
+                run_on_insecure_origins=True
+            )
+            
+            # Additional WebDriver masking
+            self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {
+                "userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                "platform": "Windows"
+            })
+            
+            # Add more human-like properties
+            self.driver.execute_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+            """)
+            
         except Exception as e:
             print("Error starting chrome driver.")
             raise e
-        
-        # Avoid navigator.webdriver = True Detection
-        self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
 
-    
-    def __del__(self):
-        # Close chrome on destruction
-        try:
-            self.close()
-        except Exception as e:
-            pass
-    
+    def human_like_scroll(self):
+        """Implement human-like scrolling behavior"""
+        total_height = self.driver.execute_script("return document.body.scrollHeight")
+        viewport_height = self.driver.execute_script("return window.innerHeight")
+        current_position = 0
+        
+        while current_position < 1600:
+            # Random scroll amount
+            scroll_amount = random.randint(300, 700)
+            current_position += scroll_amount
+            
+            # Scroll with random speed
+            self.driver.execute_script(f"""
+                window.scrollTo({{
+                    top: {current_position},
+                    behavior: 'smooth'
+                }});
+            """)
+            
+            # Random pause between scrolls
+            time.sleep(random.uniform(0.5, 2.0))
+            
+            # Occasionally scroll back up slightly
+            if random.random() < 0.2:
+                current_position -= random.randint(40, 100)
+                self.driver.execute_script(f"window.scrollTo(0, {current_position})")
+                time.sleep(random.uniform(0.3, 0.7))
+
     def open_url(self, url: str, allow_captcha: bool = False):
-        # Open URL provided
-        time.sleep(0.4)
-        self.driver.execute_script(f"window.location.href = 'https://quizlet.com'")
-
-        try:
-            time.sleep(0.5)
-            self.driver.execute_script(f"window.location.href = '{url}'")
-        except Exception as e:
-            print("Invalid URL. Please double check your input. Closing Chrome...")
-            self.close()
-            raise e
+        # Randomize initial delay
+        time.sleep(random.uniform(1, 3))
         
-        scroll_script = """
-        let scrollInterval = setInterval(() => {
-            window.scrollBy(0, 14); // Adjust scroll step for smoothness
-            if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
-                clearInterval(scrollInterval); // Stop when reaching bottom
-            }
-        }, 20); // Adjust interval speed
-        """
-        WebDriverWait(self.driver, 10).until(lambda d: d.execute_script("return document.readyState") == "complete")
-        self.driver.execute_script(scroll_script)
-        print("URL Loaded")
-
-        # Detect Bot Detector that cannot be bypassed
+        # First visit homepage with some random behavior
+        self.driver.get("https://quizlet.com")
+        time.sleep(random.uniform(2, 4))
+        
+        # Now navigate to the actual page
+        self.driver.get(url)
+        
+        # Wait for page load with random additional delay
+        WebDriverWait(self.driver, 10).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+        time.sleep(random.uniform(1, 3))
+        
+        # Human-like scrolling
+        self.human_like_scroll()
+        
         if (not allow_captcha and 
             "quizlet" in self.get_active_tab_url() and 
             EC.presence_of_element_located((By.ID, "px-captcha-wrapper"))):
             self.close()
-            raise RuntimeError("Captcha Detected. It knows we aren't a human!")
+            raise RuntimeError("Captcha Detected despite stealth measures!")
+
+    def simulate_human_behavior(self):
+        """Simulate random human-like behavior"""
+        actions = ActionChains(self.driver)
+        
+        # Random mouse movements
+        for _ in range(random.randint(3, 7)):
+            x = random.randint(0, 700)
+            y = random.randint(0, 500)
+            actions.move_by_offset(x, y)
+            actions.pause(random.uniform(0.1, 0.5))
+        
+        # Occasionally highlight text
+        if random.random() < 0.3:
+            elements = self.driver.find_elements(By.CSS_SELECTOR, "span.TermText")
+            if elements:
+                element = random.choice(elements)
+                actions.move_to_element(element)
+                actions.click_and_hold()
+                actions.pause(random.uniform(0.2, 0.7))
+                actions.release()
+        
+        actions.perform()
+        time.sleep(random.uniform(0.5, 2))
+
+    def extract_flashcards(self):
+        """Extract flashcards with human-like behavior"""
+        flashcards = []
+        
+        try:
+            # Wait for content with random delay
+            WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "section[data-testid='terms-list']"))
+            )
+            time.sleep(random.uniform(0.5, 2))
+            
+            # Simulate human behavior before extraction
+            # self.simulate_human_behavior()
+            
+            section = self.driver.find_element(By.CSS_SELECTOR, "section[data-testid='terms-list']")
+            term_elements = section.find_elements(By.CSS_SELECTOR, "span.TermText.notranslate.lang-en")
+            
+            for i in range(0, len(term_elements), 2):
+                try:
+                    # if random.random() < 0.3:  # Occasionally add delay between extractions
+                    #     time.sleep(random.uniform(0.1, 0.5))
+                    
+                    term = term_elements[i].text.strip()
+                    definition = term_elements[i+1].text.strip()
+                    
+                    if term and definition:
+                        flashcard = {
+                            'term': term,
+                            'definition': definition
+                        }
+                        flashcards.append(flashcard)
+                        
+                except Exception as e:
+                    print(f"Error extracting card: {str(e)}")
+                    continue
+                    
+        except Exception as e:
+            print(f"Error waiting for page elements: {str(e)}")
+            
+        return flashcards
+
     
     def close_full_screen_ad(self):
         # Close 
@@ -110,57 +209,11 @@ class QuizletChromeReader:
         """Get the URL of the currently active tab"""
         return self.driver.current_url
 
-    def extract_flashcards(self) -> List[Dict[str, str]]:
-        """Extract flashcards from the current page"""
-        flashcards = []
-        
-        # Wait for the flashcard elements to load
-        try:
-            # Wait for any span with class TermText to be present
-            WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "section[data-testid='terms-list']"))
-            )
-
-            # Small delay to ensure all cards are loaded
-            time.sleep(2)
-
-            # Find the section containing all the terms
-            section = self.driver.find_element(By.CSS_SELECTOR, "section[data-testid='terms-list']")
-
-            # Find all term and definition spans within that section
-            term_elements = section.find_elements(By.CSS_SELECTOR, "span.TermText.notranslate.lang-en")
-
-            # Iterate through the found terms and definitions
-            flashcards = []
-            for i in range(0, len(term_elements), 2):  # Assuming terms and definitions alternate
-                try:
-                    # Each term is at an even index and its corresponding definition is at the next (odd) index
-                    term = term_elements[i].text.strip()
-                    definition = term_elements[i+1].text.strip()
-
-                    # Store the flashcard if both term and definition exist
-                    if term and definition:
-                        flashcard = {
-                            'term': term,
-                            'definition': definition
-                        }
-                        flashcards.append(flashcard)
-                        
-                except Exception as e:
-                    print(f"Error extracting card: {str(e)}")
-                    continue
-
-
-        except Exception as e:
-            print(f"Error waiting for page elements: {str(e)}")
-            
-        return flashcards
-
     def save_to_json(self, flashcards: List[Dict[str, str]], output_file=OUTPUT_FILE) -> None:
         """Save the flashcards to a JSON file"""
         try:
             with open(output_file, 'w', encoding='utf-8') as f:
-                json.dump({'flashcards': flashcards}, f, ensure_ascii=False, indent=2)
+                json.dump({'terms': flashcards}, f, ensure_ascii=False, indent=2)
             print(f"Successfully saved {len(flashcards)} flashcards to {output_file}")
         except Exception as e:
             print(f"Error saving to file: {str(e)}")
@@ -200,7 +253,7 @@ class QuizletChromeReader:
 if __name__ == "__main__":
     url = "https://quizlet.com/434682915/mkt327-questions-flash-cards/?funnelUUID=158f1531-5bde-47f7-b2c2-bcbf1c67d0ec"
     # url = "https://vercel.com/"
-    reader = QuizletChromeReader()
+    reader = QuizletStealthReader()
     reader.open_url(url, allow_captcha=True)
     reader.scan()
 
